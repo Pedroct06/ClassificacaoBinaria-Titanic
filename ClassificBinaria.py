@@ -6,13 +6,20 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
 #Carrega o dataset, que falta eu pegar no kaggle
-df = pd.read_csv("Datasetaqui")
+df = pd.read_csv("Titanic-Dataset.csv")
 
-#Preenche as linhas vazias com a mediana das outras, é melhor doq só eliminar se tiver vazia
-df = df.fillna(df.mean())
+#Tratamento dos dados do dataSet. Dropei as colunas com o nome, o ticket, a cabine e o Id dos passageiros, para melhor otimização
+#E porque não são tão relevantes, além disso preechi os valores faltantes na coluna de idade com a mediana dessa coluna, e dropei
+# a coluna do local onde foram embarcados, além disso criei a coluna de família na tentativa de melhorar a precisão
+#df["FamilySize"] = df["SibSp"] + df["Parch"] + 1
+#df["IsAlone"] = 1
+#df.loc[df["FamilySize"] > 1, ["IsAlone"]] = 0
+df = df.drop(["Name", "Ticket", "Cabin", "PassengerId"], axis=1)
+df["Age"] = df["Age"].fillna(df["Age"].median())
+df = df.dropna(subset = "Embarked")
 
 #Define a coluna que eu quero classificar/prever
-Coluna = "weather"
+Coluna = "Survived"
 
 #Pega todas as colunas, menos a coluna que eu escolhi
 X = df.drop(Coluna, axis=1)
@@ -22,9 +29,6 @@ Y = df[Coluna]
 
 #Transforma o texto em binário
 X = pd.get_dummies(X, drop_first=True)
-
-#Converte o texto da coluna que eu quis, para binário(Falta ajeitar o texto para ser igual ao dataset)
-Y = Y.map({"raining" : 1, "not" : 0})
 
 #Cria as variáveis que eu vou utilizar para treinar e testar, defini o padrão para 70% dos dados para treinto, e 30% para teste
 X_treino, X_test, Y_treino, Y_test = train_test_split(X, Y, test_size=0.3, random_state=1)
@@ -40,13 +44,13 @@ X_treino = scalonamento.fit_transform(X_treino)
 X_test = scalonamento.transform(X_test)
 
 #criando o modelo
-modelo = LogisticRegression
+modelo = LogisticRegression()
 #Treinando o modelo utilizando os dados de teste de X, para prever o Y
-modelo.fit(X_test,Y_test)
+modelo.fit(X_treino,Y_treino)
 
 #Guardando em uma variável a precisão do modelo
 precisao = modelo.score(X_test,Y_test)
 
 #Imprimindo a precisao
-print(F"Precisao igual a: {precisao:.2f}%")
+print(F"Precisao igual a: {precisao * 100:.2f}%")
 
